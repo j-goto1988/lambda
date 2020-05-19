@@ -1,0 +1,43 @@
+・処理の内容
+パケット名がsampleのimagesにjpgをアップすると、パケット名sample-resizeにリサイズされた画像がアップされる
+画像のアップロードパスと登録日時がdynamoDBに登録される
+
+・環境構築
+EC2で下記を実行
+sudo yum -y install gcc openssl-devel bzip2-devel libffi-devel
+wget https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz
+tar xzf Python-3.8.1.tgz
+cd Python-3.8.1
+sudo ./configure --enable-optimizations
+sudo make altinstall
+pip3.8 install pillow -t .
+
+上記で作成されたPILとPillow.libsとPillow-7.1.2.dist-infoとlambda_function.pyをzipで固めてアップロードする
+
+・Lambdaのトリガーの設定
+S3
+パケット sample
+イベントタイプ すべてのオブジェクト作成イベント
+プレフィックス-オプション images/
+サフィックス-オプション .jpg
+トリガーの有効化 チェック
+追加をクリック
+
+・dynamoDBの設定
+下記の2テーブルを作成
+
+s3_images(画像管理テーブル)
+id 主キー   数値型
+upload_path 文字列型
+created_at  文字列型
+
+ids(各テーブルのid管理テーブル。autoincrementがないため。)
+table_name 主キー 文字列型
+id                数値型
+
+上記二つのテーブルを作成後、idsにtable_nameがs3_images、idが0を登録する
+
+・S3の設定
+下記の二つのパケットを作成
+sample
+sample-resize
